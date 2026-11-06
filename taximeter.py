@@ -4,11 +4,12 @@ import os
 import time
 from datetime import datetime
 
-# Fares in euros per second (Madrid EMT zone, June 2025)
-RATE_STOPPED = 0.02
-RATE_MOVING = 0.05
-
 HISTORY_FILE = "trips.json"
+CONFIG_FILE = "config.json"
+
+# Used only if config.json is missing or invalid
+DEFAULT_RATE_STOPPED = 0.02
+DEFAULT_RATE_MOVING = 0.05
 
 # Every event is written to taximeter.log with date and time
 logging.basicConfig(
@@ -18,12 +19,31 @@ logging.basicConfig(
 )
 
 
+def load_rates():
+    """Read the fares (EUR per second) from config.json, or use the defaults."""
+    try:
+        with open(CONFIG_FILE, "r") as file:
+            config = json.load(file)
+        rate_stopped = float(config["rate_stopped"])
+        rate_moving = float(config["rate_moving"])
+        if rate_stopped < 0 or rate_moving < 0:
+            raise ValueError("rates cannot be negative")
+        logging.info("Rates loaded from %s", CONFIG_FILE)
+        return rate_stopped, rate_moving
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        logging.error("Could not load %s (%s). Using default rates", CONFIG_FILE, error)
+        return DEFAULT_RATE_STOPPED, DEFAULT_RATE_MOVING
+
+
+RATE_STOPPED, RATE_MOVING = load_rates()
+
+
 def show_instructions():
     print("\n=== TAXI METER ===")
     print("Commands:")
     print("  start   -> begin a new trip")
-    print("  stop    -> taxi is stopped (low rate: 0.02 EUR/s)")
-    print("  move    -> taxi is moving  (high rate: 0.05 EUR/s)")
+    print(f"  stop    -> taxi is stopped (low rate: {RATE_STOPPED} EUR/s)")
+    print(f"  move    -> taxi is moving  (high rate: {RATE_MOVING} EUR/s)")
     print("  finish  -> end the trip and show the total")
     print("  history -> show today's trips")
     print("  exit    -> close the program")
