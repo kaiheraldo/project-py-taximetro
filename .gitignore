@@ -1,3 +1,4 @@
 taximeter.log
 trips.json
 __pycache__/
+auth.json
