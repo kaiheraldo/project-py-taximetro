@@ -2,6 +2,7 @@ import json
 import logging
 
 from history import TripHistory
+from auth import Auth
 from trip import Trip
 
 CONFIG_FILE = "config.json"
@@ -126,6 +127,8 @@ class Taximeter:
 
 
 def main():
+    if not Auth().login():
+        return  # wrong password: do not show the menu
     rate_stopped, rate_moving = load_rates()
     Taximeter(rate_stopped, rate_moving, TripHistory()).run()
 
