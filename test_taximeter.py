@@ -53,6 +53,42 @@ class TestTrip(unittest.TestCase):
         self.assertEqual(Trip(0.02, 0.05).state, Trip.STOPPED)
 
 
+class TestCurrentTotal(unittest.TestCase):
+    @patch("trip.time.time")
+    def test_live_fare_while_stopped(self, mock_time):
+        mock_time.return_value = 1000.0
+        trip = Trip(0.02, 0.05)
+        mock_time.return_value = 1010.0
+        self.assertAlmostEqual(trip.current_total(), 10 * 0.02)
+
+    @patch("trip.time.time")
+    def test_live_fare_across_state_change(self, mock_time):
+        mock_time.return_value = 1000.0
+        trip = Trip(0.02, 0.05)
+        mock_time.return_value = 1010.0
+        trip.change_state(Trip.MOVING)
+        mock_time.return_value = 1020.0
+        self.assertAlmostEqual(trip.current_total(), 10 * 0.02 + 10 * 0.05)
+
+    @patch("trip.time.time")
+    def test_reading_the_fare_does_not_change_the_trip(self, mock_time):
+        mock_time.return_value = 1000.0
+        trip = Trip(0.02, 0.05)
+        mock_time.return_value = 1010.0
+        trip.current_total()
+        self.assertEqual(trip.total, 0.0)
+        self.assertEqual(trip.last_change, 1000.0)
+
+    @patch("trip.time.time")
+    def test_live_fare_matches_final_fare(self, mock_time):
+        mock_time.return_value = 1000.0
+        trip = Trip(0.02, 0.05)
+        trip.change_state(Trip.MOVING)
+        mock_time.return_value = 1008.0
+        live = trip.current_total()
+        self.assertAlmostEqual(live, trip.finish())
+
+
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
