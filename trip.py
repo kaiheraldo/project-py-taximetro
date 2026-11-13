@@ -36,3 +36,8 @@ class Trip:
         """Close the trip and return the total fare in euros."""
         self._update_fare()
         return self.total
+
+    def current_total(self):
+        """Return the fare so far, including the time since the last change (does not change the trip)."""
+        rate = self.rate_moving if self.state == Trip.MOVING else self.rate_stopped
+        return self.total + (time.time() - self.last_change) * rate
