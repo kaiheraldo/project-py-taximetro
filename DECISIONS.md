@@ -38,3 +38,20 @@ Only the Python standard library is used, so nothing has to be installed.
 - Each feature was developed on its own branch and merged into `main` through a pull request.
 - Commit messages follow the convention `feat:`, `test:`, `chore:` and `docs:`.
 - Progress is tracked on the GitHub Projects Kanban board, with one column per phase.
+
+## Phase 3
+
+**Object-oriented design with three classes.** The program was split into modules, each with one job:
+- `Trip` (`trip.py`) holds the state, the running fare and the start time of one trip. It does not print, log or touch files, so the command-line menu and the graphical interface can both use it.
+- `TripHistory` (`history.py`) saves finished trips to `trips.json` and reads them back, including filtering by day.
+- `Taximeter` (`taximeter.py`) runs the command-line menu and connects the other classes.
+
+The behavior did not change during the refactor. The existing tests were adapted to the new structure and still pass, which is how we knew nothing broke. Dependencies such as the history file and the rates are passed in when an object is created, so tests can use temporary files and fake values.
+
+**Password protection with a salted hash (`auth.py`).** The password is never stored. Only a random salt and a PBKDF2-HMAC-SHA256 hash with 200,000 iterations are saved in `auth.json`. The salt means two identical passwords produce different hashes, and the many iterations make guessing slower. The comparison uses `hmac.compare_digest`, which takes the same time whether the first or the last character differs. The password is typed with `getpass`, so it does not appear on screen. Access is closed after 3 wrong attempts. A missing or corrupted password file never grants access. `auth.json` is in `.gitignore` so it is never uploaded.
+
+**Graphical interface with tkinter (`gui.py`).** tkinter comes with Python, so nothing has to be installed. The window has large buttons for use on a tablet, a live fare in big digits and today's trips. The buttons that do not make sense are disabled (for example, FINISH before a trip starts), so the driver cannot make a mistake. The live fare is refreshed every 200 ms with `after()`, which keeps the window responsive. It is computed by `Trip.current_total()`, which only reads the fare and does not change the trip, so the live number always matches the final fare. The window asks for the password before it is shown, with the same rules as the command-line version. Rates, history and password logic are reused from the other modules, not copied.
+
+**Tests.** There are now 34 automated tests. The new ones cover the password logic (correct, wrong and too-short passwords, the stored file never containing the password, different salts, and missing or corrupted files) and the live fare. The window itself is not tested automatically, because that would need a screen. The logic behind it is covered by the tests for `Trip`.
+
+**Known limitations and next steps.** The GUI buttons are grey on macOS, because tkinter ignores button background colors on that system, and a library such as customtkinter could fix that. The password has a minimum length but no other rules. Phase 4 will replace the JSON file with a database and expose the data through an API.
