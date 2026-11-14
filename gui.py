@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog
 
 from auth import MAX_ATTEMPTS, MIN_LENGTH, Auth
-from history import TripHistory
+from database import TripDatabase
 from taximeter import load_rates
 from trip import Trip
 
@@ -87,7 +87,7 @@ class TaximeterApp(tk.Tk):
             return
         lines = [f"{n}. {t['start'][11:]} -> {t['end'][11:]}   {t['total_eur']:.2f} EUR"
                  for n, t in enumerate(trips, start=1)]
-        lines.append(f"Total today: {TripHistory.total_of(trips):.2f} EUR")
+        lines.append(f"Total today: {self.history.total_of(trips):.2f} EUR")
         self.history_text.set("\n".join(lines))
 
     def start_trip(self):
@@ -146,7 +146,7 @@ def ask_login(root, auth):
 
 def main():
     rate_stopped, rate_moving = load_rates()
-    app = TaximeterApp(rate_stopped, rate_moving, TripHistory())
+    app = TaximeterApp(rate_stopped, rate_moving, TripDatabase())
     app.withdraw()  # hide the window until the login succeeds
     if ask_login(app, Auth()):
         app.deiconify()
