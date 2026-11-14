@@ -1,7 +1,7 @@
 import json
 import logging
 
-from history import TripHistory
+from database import TripDatabase
 from auth import Auth
 from trip import Trip
 
@@ -94,7 +94,7 @@ class Taximeter:
         print("\n--- Today's trips ---")
         for number, trip in enumerate(trips, start=1):
             print(f"{number}. {trip['start'][11:]} -> {trip['end'][11:]}  {trip['total_eur']:.2f} EUR")
-        print(f"Total today: {TripHistory.total_of(trips):.2f} EUR")
+        print(f"Total today: {self.history.total_of(trips):.2f} EUR")
 
     def run(self):
         logging.info("Program started")
@@ -130,7 +130,7 @@ def main():
     if not Auth().login():
         return  # wrong password: do not show the menu
     rate_stopped, rate_moving = load_rates()
-    Taximeter(rate_stopped, rate_moving, TripHistory()).run()
+    Taximeter(rate_stopped, rate_moving, TripDatabase()).run()
 
 
 if __name__ == "__main__":
