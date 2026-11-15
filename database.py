@@ -62,7 +62,9 @@ class TripDatabase:
     def load(self):
         """Return all saved trips as a list of dictionaries."""
         with self._connect() as connection:
-            rows = connection.execute("SELECT start, end, total_eur FROM trips").fetchall()
+            rows = connection.execute(
+                "SELECT start, end, total_eur FROM trips ORDER BY start"
+            ).fetchall()
         return [dict(row) for row in rows]
 
     def count(self):
